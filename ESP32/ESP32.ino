@@ -2,6 +2,7 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
+#include <Arduino.h>
 
 #define DHTPIN 21
 #define DHTTYPE DHT22
@@ -123,18 +124,41 @@ void handleRoot() {
   server.send(200, "text/html", HTML_PAGE);
 }
 
+String tempo_de_atividade_ddhhmmss(unsigned long time_ms) {
+    // Calcula o tempo decorrido em dias, horas, minutos e segundos
+    unsigned long segundos = time_ms / 1000;
+    unsigned long minutos = segundos / 60;
+    unsigned long horas = minutos / 60;
+    unsigned long dias = horas / 24;
+
+    segundos %= 60;
+    minutos %= 60;
+    horas %= 24;
+
+    // String para armazenar o tempo formatado
+    char tempo_atividade_formatado[20]; // Ajuste o tamanho conforme necessário
+
+    // Formata o tempo decorrido no formato dd.hh:mm:ss
+    sprintf(tempo_atividade_formatado, "%02lu.%02lu:%02lu:%02lu", dias, horas, minutos, segundos);
+
+    // Retorna o tempo formatado como uma String
+    return String(tempo_atividade_formatado);
+}
 void handleData() {
-  StaticJsonDocument<200> doc;
+
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
-  
+  unsigned long tempo_atividade = millis();
+
+  StaticJsonDocument<200> doc;
+
   doc["umidade"] = humidity;
   doc["temperatura"] = temperature;
-  doc["temp_desejada"] = 25.0; // Valores desejados fictícios
-  doc["umidade_desejada"] = 60.0;
-  doc["tempo_atividade"] = 10.0;
-  doc["tempo_total"] = 00;
-  doc["tempo_aquecimento"] = 5.0;
+  doc["temp_desejada"] = 60.0; // Valores desejados fictícios
+  doc["umidade_desejada"] = 10.0;
+  doc["tempo_atividade"] = tempo_de_atividade_ddhhmmss(tempo_atividade);
+  doc["tempo_total"] = 20;
+  doc["tempo_aquecimento"] = 567;
   
   String output;
   serializeJson(doc, output);
