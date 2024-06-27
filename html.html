@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dados do Sensor DHT</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background-color: #2e2b2b;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      text-align: center;
+      width: 80%;
+    }
+    h1 {
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 8px;
+      color: #ddd;
+    }
+    th {
+      background-color: #3e3e3e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dados do Sensor DHT</h1>
+    <table>
+      <tr>
+        <th colspan="3">Título</th>
+      </tr>
+      <tr>
+        <th>##DHT</th>
+        <th>##Configuração</th>
+        <th>##Tempo</th>
+      </tr>
+      <tr>
+        <td rowspan="2">Humidade {umidade}</td>
+        <td>Temp. desejada {temp_desejada}</td>
+        <td rowspan="2">Tempo de atividade {tempo_atividade}</td>
+      </tr>
+      <tr>
+        <td>Humidade desejada {umidade_desejada}</td>
+      </tr>
+      <tr>
+        <td rowspan="2">Temperatura {temperatura}</td>
+        <td>Tempo total {tempo_total}</td>
+        <td rowspan="2">Tempo de aquecimento {tempo_aquecimento}</td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+    </table>
+  </div>
+  
+  
+</body>
+</html>
