@@ -6,6 +6,7 @@
 
 #define DHTPIN 21
 #define DHTTYPE DHT22
+#define N_HUMIDITY_HISTORY 10
 #define N_TEMPERATURE_HISTORY 10
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -13,11 +14,17 @@ WebServer server(80);
 
 const char* ssid = "Luna";
 const char* password = "@brigadeiro!";
-const char HTML_PAGE[] = R"rawliteral(
+int humidity_history[2][N_HUMIDITY_HISTORY] = {{0}};
+unsigned long humidity_history_recording_indexer = 0;
+int temperature_history[2][N_TEMPERATURE_HISTORY] = {{0}};
+unsigned long temperature_history_recording_indexer = 0;
+
+const char* HTML_PAGE = R"rawliteral(
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <title>Dados do Sensor DHT</title>
+  <meta charset="UTF-8">
+  <title>Filament Dehumidifier</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -53,23 +60,105 @@ const char HTML_PAGE[] = R"rawliteral(
     th {
       background-color: #3e3e3e;
     }
+    .chart-container {
+      width: 45%;
+      margin: 10px;
+      float: left;
+    }
+    .ip-link {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #ddd;
+      text-decoration: none;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Função para atualizar dados na página
+    //setInterval(fetchData, 500); // Atualiza a cada 0.5 segundos
     function updateData(data) {
-      document.getElementById('umidade').innerText = data.umidade + ' %';
-      document.getElementById('temperatura').innerText = data.temperatura + ' °C';
+      document.getElementById('umidade').innerText = data.umidade.toFixed(2) + ' %';
+      document.getElementById('temperatura').innerText = data.temperatura.toFixed(2) + ' °C';
       document.getElementById('temp_desejada').innerText = data.temp_desejada + ' °C';
       document.getElementById('umidade_desejada').innerText = data.umidade_desejada + ' %';
       document.getElementById('tempo_atividade').innerText = data.tempo_atividade + ' s';
       document.getElementById('tempo_total').innerText = data.tempo_total + ' s';
       document.getElementById('tempo_aquecimento').innerText = data.tempo_aquecimento + ' s';
+
+      updateCharts(data.humidity_history, data.temperature_history);
     }
 
-    // Função para fazer requisição AJAX para obter dados do servidor
+    function updateCharts(humidityHistory, temperatureHistory) {
+      var humidityLabels = [];
+      var humidityData = [];
+      humidityHistory.forEach(function(item) {
+        humidityLabels.push(item.time);
+        humidityData.push(item.humidity);
+      });
+
+      var temperatureLabels = [];
+      var temperatureData = [];
+      temperatureHistory.forEach(function(item) {
+        temperatureLabels.push(item.time);
+        temperatureData.push(item.temperature);
+      });
+
+      var ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+      var chartHumidity = new Chart(ctxHumidity, {
+        type: 'line',
+        data: {
+          labels: humidityLabels,
+          datasets: [{
+            label: 'Histórico de Umidade',
+            data: humidityData,
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          }
+        }
+      });
+
+      var ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
+      var chartTemperature = new Chart(ctxTemperature, {
+        type: 'line',
+        data: {
+          labels: temperatureLabels,
+          datasets: [{
+            label: 'Histórico de Temperatura',
+            data: temperatureData,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          }
+        }
+      });
+    }
+
     function fetchData() {
       var xhr = new XMLHttpRequest();
+
       xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
           if (xhr.status === 200) {
@@ -80,33 +169,34 @@ const char HTML_PAGE[] = R"rawliteral(
           }
         }
       };
+
       xhr.open('GET', '/data', true);
       xhr.send();
     }
 
-    // Atualiza os dados a cada 5 segundos
-    setInterval(fetchData, 5000);
+    setInterval(fetchData, 300); // Atualiza a cada 5 segundos
   </script>
 </head>
 <body>
+  <a class="ip-link" href="http://##ESP32_IP##/data">{IP do ESP32}/data</a>
   <div class="container">
-    <h1>Dados do Sensor DHT</h1>
+    <h1>Filament Dehumidifier</h1>
     <table>
       <tr>
-        <th colspan="3">Título</th>
+        <th colspan="3">......</th>
       </tr>
       <tr>
-        <th>##DHT</th>
-        <th>##Configuração</th>
-        <th>##Tempo</th>
+        <th>Dados do Sensor DHT</th>
+        <th>Configuração</th>
+        <th>Tempo</th>
       </tr>
       <tr>
-        <td rowspan="2">Humidade <span id="umidade">{umidade}</span></td>
+        <td rowspan="2">Umidade <span id="umidade">{umidade}</span></td>
         <td>Temp. desejada <span id="temp_desejada">{temp_desejada}</span></td>
         <td rowspan="2">Tempo de atividade <span id="tempo_atividade">{tempo_atividade}</span></td>
       </tr>
       <tr>
-        <td>Humidade desejada <span id="umidade_desejada">{umidade_desejada}</span></td>
+        <td>Umidade desejada <span id="umidade_desejada">{umidade_desejada}</span></td>
       </tr>
       <tr>
         <td rowspan="2">Temperatura <span id="temperatura">{temperatura}</span></td>
@@ -117,14 +207,21 @@ const char HTML_PAGE[] = R"rawliteral(
         <td></td>
       </tr>
     </table>
+    
+    <!-- Gráficos -->
+    <div class="chart-container">
+      <canvas id="humidityChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="temperatureChart"></canvas>
+    </div>
+    <div style="clear: both;"></div>
   </div>
 </body>
 </html>
 )rawliteral";
 
-void handleRoot() {
-  server.send(200, "text/html", HTML_PAGE);
-}
+
 
 String tempo_de_atividade_ddhhmmss(unsigned long time_ms) {
     // Calcula o tempo decorrido em dias, horas, minutos e segundos
@@ -147,27 +244,41 @@ String tempo_de_atividade_ddhhmmss(unsigned long time_ms) {
     return String(tempo_atividade_formatado);
 }
 
-int temperature_history[2][N_TEMPERATURE_HISTORY] = {
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // X
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}  // Y
-  };
-unsigned long temperature_history_recording_indexer = 0;
+void handleRoot() {
+  String htmlPage = String(HTML_PAGE);
+  htmlPage.replace("##ESP32_IP##", String(WiFi.localIP()));
+  server.send(200, "text/html", htmlPage);
+}
 
 void handleData() {
-
+  Serial.println("Medindo....");
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
   unsigned long tempo_atividade = millis();
 
-  temperature_history[0][temperature_history_recording_indexer] = temperature;
-  temperature_history[1][temperature_history_recording_indexer] = tempo_atividade;
-  temperature_history_recording_indexer += 1;
-  if (temperature_history_recording_indexer >= N_TEMPERATURE_HISTORY) {
-    temperature_history_recording_indexer = 0;
+  humidity_history[0][humidity_history_recording_indexer] = humidity;
+  humidity_history[1][humidity_history_recording_indexer] = tempo_atividade;
+  humidity_history_recording_indexer = (humidity_history_recording_indexer + 1) % N_HUMIDITY_HISTORY;
+
+
+  // Atualiza o histórico de umidade
+  for (int n = 0; n < N_HUMIDITY_HISTORY - 1; n++) {
+      humidity_history[0][n] = humidity_history[0][n + 1];
+      humidity_history[1][n] = humidity_history[1][n + 1];
   }
+  humidity_history[0][N_HUMIDITY_HISTORY - 1] = humidity;
+  humidity_history[1][N_HUMIDITY_HISTORY - 1] = tempo_atividade;
 
+  // Atualiza o histórico de temperatura
+  for (int n = 0; n < N_TEMPERATURE_HISTORY - 1; n++) {
+      temperature_history[0][n] = temperature_history[0][n + 1];
+      temperature_history[1][n] = temperature_history[1][n + 1];
+  }
+  temperature_history[0][N_TEMPERATURE_HISTORY - 1] = temperature;
+  temperature_history[1][N_TEMPERATURE_HISTORY - 1] = tempo_atividade;
+  temperature_history_recording_indexer = (temperature_history_recording_indexer + 1) % N_TEMPERATURE_HISTORY;
 
-  StaticJsonDocument<200> doc;
+  StaticJsonDocument<1024> doc;
 
   doc["umidade"] = humidity;
   doc["temperatura"] = temperature;
@@ -176,11 +287,19 @@ void handleData() {
   doc["tempo_atividade"] = tempo_de_atividade_ddhhmmss(tempo_atividade);
   doc["tempo_total"] = 20;
   doc["tempo_aquecimento"] = 567;
-  JsonArray coordsArray = doc.createNestedArray("coordenadas");
+
+  JsonArray humidityHistoryArray = doc.createNestedArray("humidity_history");
+  for (int i = 0; i < N_HUMIDITY_HISTORY; i++) {
+    JsonObject historyItem = humidityHistoryArray.createNestedObject();
+    historyItem["humidity"] = humidity_history[0][i];
+    historyItem["time"] = humidity_history[1][i] / 1000;
+  }
+
+  JsonArray temperatureHistoryArray = doc.createNestedArray("temperature_history");
   for (int i = 0; i < N_TEMPERATURE_HISTORY; i++) {
-    JsonArray coord = coordsArray.createNestedArray();
-    coord.add(temperature_history[0][i]); // X
-    coord.add(temperature_history[1][i]); // Y
+    JsonObject historyItem = temperatureHistoryArray.createNestedObject();
+    historyItem["temperature"] = temperature_history[0][i];
+    historyItem["time"] = temperature_history[1][i] / 1000;
   }
 
   String output;
@@ -190,9 +309,9 @@ void handleData() {
 
 void setup() {
   Serial.begin(115200);
-  delay(100);
+  //delay(100);
   dht.begin();
-  
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);

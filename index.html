@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+  <meta charset="UTF-8">
   <title>Dados do Sensor DHT</title>
   <style>
     body {
@@ -37,10 +38,21 @@
     th {
       background-color: #3e3e3e;
     }
+    .chart-container {
+      width: 45%;
+      margin: 10px;
+      float: left;
+    }
+    .ip-link {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #ddd;
+      text-decoration: none;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Função para atualizar dados na página
     function updateData(data) {
       document.getElementById('umidade').innerText = data.umidade + ' %';
       document.getElementById('temperatura').innerText = data.temperatura + ' °C';
@@ -49,11 +61,81 @@
       document.getElementById('tempo_atividade').innerText = data.tempo_atividade + ' s';
       document.getElementById('tempo_total').innerText = data.tempo_total + ' s';
       document.getElementById('tempo_aquecimento').innerText = data.tempo_aquecimento + ' s';
+
+      updateCharts(data.humidity_history, data.temperature_history);
     }
 
-    // Função para fazer requisição AJAX para obter dados do servidor
+    function updateCharts(humidityHistory, temperatureHistory) {
+      var humidityLabels = [];
+      var humidityData = [];
+      humidityHistory.forEach(function(item) {
+        humidityLabels.push(item.time);
+        humidityData.push(item.humidity);
+      });
+
+      var temperatureLabels = [];
+      var temperatureData = [];
+      temperatureHistory.forEach(function(item) {
+        temperatureLabels.push(item.time);
+        temperatureData.push(item.temperature);
+      });
+
+      var ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+      var chartHumidity = new Chart(ctxHumidity, {
+        type: 'line',
+        data: {
+          labels: humidityLabels,
+          datasets: [{
+            label: 'Histórico de Umidade',
+            data: humidityData,
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          }
+        }
+      });
+
+      var ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
+      var chartTemperature = new Chart(ctxTemperature, {
+        type: 'line',
+        data: {
+          labels: temperatureLabels,
+          datasets: [{
+            label: 'Histórico de Temperatura',
+            data: temperatureData,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          }
+        }
+      });
+    }
+
     function fetchData() {
       var xhr = new XMLHttpRequest();
+
       xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
           if (xhr.status === 200) {
@@ -64,43 +146,15 @@
           }
         }
       };
+
       xhr.open('GET', '/data', true);
       xhr.send();
     }
 
-    // Atualiza os dados a cada 5 segundos
-    setInterval(fetchData, 5000);
+    setInterval(fetchData, 5000); // Atualiza a cada 5 segundos
   </script>
 </head>
 <body>
   <div class="container">
     <h1>Dados do Sensor DHT</h1>
-    <table>
-      <tr>
-        <th colspan="3">Título</th>
-      </tr>
-      <tr>
-        <th>##DHT</th>
-        <th>##Configuração</th>
-        <th>##Tempo</th>
-      </tr>
-      <tr>
-        <td rowspan="2">Humidade <span id="umidade">{umidade}</span></td>
-        <td>Temp. desejada <span id="temp_desejada">{temp_desejada}</span></td>
-        <td rowspan="2">Tempo de atividade <span id="tempo_atividade">{tempo_atividade}</span></td>
-      </tr>
-      <tr>
-        <td>Humidade desejada <span id="umidade_desejada">{umidade_desejada}</span></td>
-      </tr>
-      <tr>
-        <td rowspan="2">Temperatura <span id="temperatura">{temperatura}</span></td>
-        <td>Tempo total <span id="tempo_total">{tempo_total}</span></td>
-        <td rowspan="2">Tempo de aquecimento <span id="tempo_aquecimento">{tempo_aquecimento}</span></td>
-      </tr>
-      <tr>
-        <td></td>
-      </tr>
-    </table>
-  </div>
-</body>
-</html>
+    <a href="http://"
