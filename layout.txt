@@ -1,0 +1,33 @@
+| Título                                                                                  |
+|-----------------------------------------------------------------------------------------|
+| ##DHT                      | ##Configuração                  | ##Tempo                  |
+|----------------------------|---------------------------------|--------------------------|
+| Humidade {valor}           | Temp. desejada {valor}          | Tempo de atividade {valor}|
+| Temperatura {valor}        | Tempo total {valor}             | Tempo de aquecimento {valor}|
+|                            | Humidade desejada {valor}       |                          |
+|-----------------------------------------------------------------------------------------|
+| ##Status                                                                            |
+|-----------------------------------------------------------------------------------------|
+| Aquecimento ligado? {valor}           | Variação Humidade {valor}                     |
+| Intensidade aquecimento {valor}       | Variação Temperatura {valor}                  |
+| Ventilação ligada? {valor}            | Temperatura alvo alcançada? {valor}           |
+| Intensidade ventilação {valor}        | Humidade alvo alcançada? {valor}              |
+| Rede Wifi {valor}                     | Tipo de rede: {Próprio/Exterior}              |
+|-----------------------------------------------------------------------------------------|
+| ##Controles                                                                       |
+|-----------------------------------------------------------------------------------------|
+| [Definir tempo alvo (entrada)] + [Enviar]        | [Ligar Aquecimento]                  |
+| [Desligar Aquecimento]                          | [Ligar Ventilação]                   |
+| [Desligar Ventilação]                           |                                      |
+|-----------------------------------------------------------------------------------------|
+| ##Adicionar Nova Rede Wifi                                                           |
+|-----------------------------------------------------------------------------------------|
+| SSID [(entrada)/caixa de texto]          | Chave [(entrada)/caixa de texto]            |
+|-----------------------------------------------------------------------------------------|
+| ##Gráficos                                                                        |
+|-----------------------------------------------------------------------------------------|
+| Humidade                        | Intensidade do aquecimento                           |
+| Temperatura                     | Aquecimento ligado?                                  |
+| Variação Humidade               | Ventilação ligada?                                   |
+| Variação Temperatura            | Intensidade da ventilação                            |
+|-----------------------------------------------------------------------------------------|
