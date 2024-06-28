@@ -6,6 +6,7 @@
 
 #define DHTPIN 21
 #define DHTTYPE DHT22
+#define N_TEMPERATURE_HISTORY 10
 
 DHT dht(DHTPIN, DHTTYPE);
 WebServer server(80);
@@ -53,6 +54,7 @@ const char HTML_PAGE[] = R"rawliteral(
       background-color: #3e3e3e;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Função para atualizar dados na página
     function updateData(data) {
@@ -144,11 +146,26 @@ String tempo_de_atividade_ddhhmmss(unsigned long time_ms) {
     // Retorna o tempo formatado como uma String
     return String(tempo_atividade_formatado);
 }
+
+int temperature_history[2][N_TEMPERATURE_HISTORY] = {
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // X
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}  // Y
+  };
+unsigned long temperature_history_recording_indexer = 0;
+
 void handleData() {
 
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
   unsigned long tempo_atividade = millis();
+
+  temperature_history[0][temperature_history_recording_indexer] = temperature;
+  temperature_history[1][temperature_history_recording_indexer] = tempo_atividade;
+  temperature_history_recording_indexer += 1;
+  if (temperature_history_recording_indexer >= N_TEMPERATURE_HISTORY) {
+    temperature_history_recording_indexer = 0;
+  }
+
 
   StaticJsonDocument<200> doc;
 
@@ -159,7 +176,13 @@ void handleData() {
   doc["tempo_atividade"] = tempo_de_atividade_ddhhmmss(tempo_atividade);
   doc["tempo_total"] = 20;
   doc["tempo_aquecimento"] = 567;
-  
+  JsonArray coordsArray = doc.createNestedArray("coordenadas");
+  for (int i = 0; i < N_TEMPERATURE_HISTORY; i++) {
+    JsonArray coord = coordsArray.createNestedArray();
+    coord.add(temperature_history[0][i]); // X
+    coord.add(temperature_history[1][i]); // Y
+  }
+
   String output;
   serializeJson(doc, output);
   server.send(200, "application/json", output);
