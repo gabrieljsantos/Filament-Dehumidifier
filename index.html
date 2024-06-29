@@ -1,8 +1,9 @@
+const char* HTML_PAGE = R"rawliteral(
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Dados do Sensor DHT</title>
+  <title>Filament Dehumidifier</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -53,9 +54,10 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    //setInterval(fetchData, 500); // Atualiza a cada 0.5 segundos
     function updateData(data) {
-      document.getElementById('umidade').innerText = data.umidade + ' %';
-      document.getElementById('temperatura').innerText = data.temperatura + ' °C';
+      document.getElementById('umidade').innerText = data.umidade.toFixed(2) + ' %';
+      document.getElementById('temperatura').innerText = data.temperatura.toFixed(2) + ' °C';
       document.getElementById('temp_desejada').innerText = data.temp_desejada + ' °C';
       document.getElementById('umidade_desejada').innerText = data.umidade_desejada + ' %';
       document.getElementById('tempo_atividade').innerText = data.tempo_atividade + ' s';
@@ -151,10 +153,123 @@
       xhr.send();
     }
 
-    setInterval(fetchData, 5000); // Atualiza a cada 5 segundos
+    setInterval(fetchData, 300); // Atualiza a cada 5 segundos
+    function enviarTempoAlvo() {
+      var tempoAlvo = document.getElementById('tempoAlvo').value;
+      console.log('Tempo alvo enviado: ' + tempoAlvo);
+      // Adicione aqui o código para enviar o tempo alvo ao servidor
+    }
+
+    function enviarTemperaturaAlvo() {
+      var temperaturaAlvo = document.getElementById('temperaturaAlvo').value;
+      console.log('Temperatura alvo enviada: ' + temperaturaAlvo);
+      // Adicione aqui o código para enviar a temperatura alvo ao servidor
+    }
+
+    function aquecer() {
+      console.log('Aquecendo...');
+      // Adicione aqui o código para iniciar o aquecimento
+    }
+
+    function definirPerfil(perfil) {
+      console.log('Perfil definido: ' + perfil);
+      // Adicione aqui o código para definir o perfil de temperatura
+    }
   </script>
 </head>
 <body>
+  <a class="ip-link" href="http://##ESP32_IP##/data">{IP do ESP32}/data</a>
   <div class="container">
-    <h1>Dados do Sensor DHT</h1>
-    <a href="http://"
+    <h1>Filament Dehumidifier</h1>
+    <table>
+      <tr>
+        <th colspan="3">......</th>
+      </tr>
+      <tr>
+        <th>Dados do Sensor DHT</th>
+        <th>Configuração</th>
+        <th>Tempo</th>
+      </tr>
+      <tr>
+        <td rowspan="2">Umidade <span id="umidade">{umidade}</span></td>
+        <td>Temp. desejada <span id="temp_desejada">{temp_desejada}</span></td>
+        <td rowspan="2">Tempo de atividade <span id="tempo_atividade">{tempo_atividade}</span></td>
+      </tr>
+      <tr>
+        <td>Umidade desejada <span id="umidade_desejada">{umidade_desejada}</span></td>
+      </tr>
+      <tr>
+        <td rowspan="2">Temperatura <span id="temperatura">{temperatura}</span></td>
+        <td>Tempo total <span id="tempo_total">{tempo_total}</span></td>
+        <td rowspan="2">Tempo de aquecimento <span id="tempo_aquecimento">{tempo_aquecimento}</span></td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+    </table>
+    <div style="display: flex;">
+      <div id="blocoA" style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <select id="tempoEscala">
+            <option value="horas">Horas</option>
+            <option value="minutos">Minutos</option>
+            <option value="segundos">Segundos</option>
+          </select>
+          <input type="text" id="tempoAlvo" placeholder="Tempo" style="margin-left: 10px; margin-right: 10px;">
+          <button onclick="enviarTempoAlvo()">Enviar Tempo</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <input type="text" id="temperaturaAlvo" placeholder="Temperatura em °C" style="margin-right: 10px;">
+          <button onclick="enviarTemperaturaAlvo()">Enviar Temperatura</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <input type="text" id="umidadeAlvo" placeholder="Umidade em %" style="margin-right: 10px;">
+          <button onclick="enviarUmidadeAlvo()">Enviar Umidade</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <div style="margin-left: 10px; margin-right: 10px;">
+            <canvas id="humidityChart"></canvas>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <input type="text" id="ventilacaoAlvo" placeholder="Ventilação em %">
+          <button onclick="enviarVentilacaoAlvo()">Enviar Ventilação</button>
+        </div>
+      </div>
+      
+      <div id="blocoB" style="display: flex; flex-direction: column; width: 120%; margin-left: 20px;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="definirPerfil('PLA')" style="width: 50%;">PLA</button>
+          <button onclick="definirPerfil('Food')" style="width: 50%;">Food</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="definirPerfil('ABS')" style="width: 50%;">ABS</button>
+          <button onclick="definirPerfil('PETG')" style="width: 50%;">PETG</button>
+        </div>
+      </div>
+      
+      <div id="blocoC" style="display: flex; flex-direction: column; width: 160%; margin-left: 20px;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="aquecer()" style="width: 50%;">Aquecer</button>
+          <button onclick="resfriar()" style="width: 50%;">Resfriar</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="ligarVentilacao()" style="width: 50%;">On Ventilação</button>
+          <button onclick="desligarVentilacao()" style="width: 50%;">Off Ventilação</button>
+        </div>
+      </div>
+    </div>
+    
+    
+    <!-- Gráficos -->
+    <div class="chart-container">
+      <canvas id="humidityChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="temperatureChart"></canvas>
+    </div>
+    <div style="clear: both;"></div>
+  </div>
+</body>
+</html>
+)rawliteral";
