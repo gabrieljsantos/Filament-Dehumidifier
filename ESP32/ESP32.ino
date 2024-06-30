@@ -72,10 +72,16 @@ const char* HTML_PAGE = R"rawliteral(
       color: #ddd;
       text-decoration: none;
     }
+    .defineTempoAlvo,
+    .defineTemperaturaAlvo,
+    .defineUmidadeAlvo,
+    .defineVentilacaoSet {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    //setInterval(fetchData, 500); // Atualiza a cada 0.5 segundos
     function updateData(data) {
       document.getElementById('umidade').innerText = data.umidade.toFixed(2) + ' %';
       document.getElementById('temperatura').innerText = data.temperatura.toFixed(2) + ' °C';
@@ -85,10 +91,10 @@ const char* HTML_PAGE = R"rawliteral(
       document.getElementById('tempo_total').innerText = data.tempo_total + ' s';
       document.getElementById('tempo_aquecimento').innerText = data.tempo_aquecimento + ' s';
 
-      updateCharts(data.humidity_history, data.temperature_history);
+      updateGraphics(data.humidity_history, data.temperature_history);
     }
 
-    function updateCharts(humidityHistory, temperatureHistory) {
+    function updateGraphics(humidityHistory, temperatureHistory) {
       var humidityLabels = [];
       var humidityData = [];
       humidityHistory.forEach(function(item) {
@@ -103,7 +109,7 @@ const char* HTML_PAGE = R"rawliteral(
         temperatureData.push(item.temperature);
       });
 
-      var ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+      var ctxHumidity = document.getElementById('humidityGraphic').getContext('2d');
       var chartHumidity = new Chart(ctxHumidity, {
         type: 'line',
         data: {
@@ -129,7 +135,7 @@ const char* HTML_PAGE = R"rawliteral(
         }
       });
 
-      var ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
+      var ctxTemperature = document.getElementById('temperatureGraphic').getContext('2d');
       var chartTemperature = new Chart(ctxTemperature, {
         type: 'line',
         data: {
@@ -207,18 +213,76 @@ const char* HTML_PAGE = R"rawliteral(
         <td></td>
       </tr>
     </table>
+    <div id="SetsConfigs" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; margin-top: 20px;">
+      <!-- Bloco dos controles de configuração -->
+      <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <select id="tempoEscala" style="flex: 1; padding: 5px;">
+            <option value="horas">Horas</option>
+            <option value="minutos">Minutos</option>
+            <option value="segundos">Segundos</option>
+          </select>
+          <input type="text" id="tempoAlvo" placeholder="Tempo" class="defineTempoAlvo" style="flex: 2; margin-left: 10px; padding: 5px;">
+          <button class="defineTempoAlvo" style="flex: 1; margin-left: 10px; padding: 5px;">Enviar Tempo</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <input type="text" id="temperaturaAlvo" placeholder="Temperatura em °C" class="defineTemperaturaAlvo" style="flex: 2; padding: 5px;">
+          <button class="defineTemperaturaAlvo" style="flex: 1; margin-left: 10px; padding: 5px;">Enviar Temperatura</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <input type="text" id="umidadeAlvo" placeholder="Umidade em %" class="defineUmidadeAlvo" style="flex: 2; padding: 5px;">
+          <button class="defineUmidadeAlvo" style="flex: 1; margin-left: 10px; padding: 5px;">Enviar Umidade</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <input type="text" id="VentilacaoSet" placeholder="Ventilação de 0 a 255" style="flex: 2; padding: 5px;">
+          <button class="defineVentilacaoSet" style="flex: 1; margin-left: 10px; padding: 5px;">Enviar Ventilação</button>
+        </div>
+      </div>
     
+      <!-- Bloco dos perfis de material -->
+      <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="definirPerfil('PLA')" style="flex: 1; padding: 10px;">PLA</button>
+          <button onclick="definirPerfil('Food')" style="flex: 1; margin-left: 10px; padding: 10px;">Food</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="definirPerfil('ABS')" style="flex: 1; padding: 10px;">ABS</button>
+          <button onclick="definirPerfil('PETG')" style="flex: 1; margin-left: 10px; padding: 10px;">PETG</button>
+        </div>
+      </div>
+    
+      <!-- Bloco dos controles de aquecimento e ventilação -->
+      <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="aquecer()" style="flex: 1; padding: 10px;">Aquecer</button>
+          <button onclick="resfriar()" style="flex: 1; margin-left: 10px; padding: 10px;">Resfriar</button>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <button onclick="ligarVentilacao()" style="flex: 1; padding: 10px;">On Ventilação</button>
+          <button onclick="desligarVentilacao()" style="flex: 1; margin-left: 10px; padding: 10px;">Off Ventilação</button>
+        </div>
+      </div>
+    </div>
+    
+     
+
     <!-- Gráficos -->
     <div class="chart-container">
-      <canvas id="humidityChart"></canvas>
+      <canvas id="humidityGraphic"></canvas>
     </div>
     <div class="chart-container">
-      <canvas id="temperatureChart"></canvas>
+      <canvas id="temperatureGraphic"></canvas>
     </div>
     <div style="clear: both;"></div>
   </div>
+
+  <script>
+    fetchData(); // Chama fetchData() uma vez para carregar os dados inicialmente
+  </script>
 </body>
 </html>
+
+  
 )rawliteral";
 
 
