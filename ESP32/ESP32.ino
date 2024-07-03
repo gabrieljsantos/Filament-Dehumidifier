@@ -9,6 +9,11 @@
 #define N_HUMIDITY_HISTORY 10
 #define N_TEMPERATURE_HISTORY 10
 
+int redPin = 13;    // Pino do LED vermelho conectado ao ESP32
+int greenPin = 12;  // Pino do LED verde conectado ao ESP32
+int bluePin = 14;   // Pino do LED azul conectado ao ESP32
+
+
 DHT dht(DHTPIN, DHTTYPE);
 WebServer server(80);
 
@@ -18,6 +23,8 @@ int humidity_history[2][N_HUMIDITY_HISTORY] = {{0}};
 unsigned long humidity_history_recording_indexer = 0;
 int temperature_history[2][N_TEMPERATURE_HISTORY] = {{0}};
 unsigned long temperature_history_recording_indexer = 0;
+bool aquecer = false; // Variável global para controle de aquecimento
+
 
 const char* HTML_PAGE = R"rawliteral(
 <!DOCTYPE html>
@@ -179,7 +186,21 @@ const char* HTML_PAGE = R"rawliteral(
       xhr.open('GET', '/data', true);
       xhr.send();
     }
-
+    function aquecer() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/aquecer", true);  // Assumindo que o endpoint no servidor é "/aquecer"
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          console.log("Aquecimento iniciado com sucesso");
+        } else {
+          console.error("Erro ao iniciar aquecimento: " + xhr.status);
+        }
+      }
+    };
+    xhr.send();  // Envia a requisição sem corpo, pois estamos apenas acionando o aquecimento
+    }
     setInterval(fetchData, 300); // Atualiza a cada 5 segundos
   </script>
 </head>
@@ -320,6 +341,7 @@ void handleData() {
   float temperature = dht.readTemperature();
   unsigned long tempo_atividade = millis();
 
+
   humidity_history[0][humidity_history_recording_indexer] = humidity;
   humidity_history[1][humidity_history_recording_indexer] = tempo_atividade;
   humidity_history_recording_indexer = (humidity_history_recording_indexer + 1) % N_HUMIDITY_HISTORY;
@@ -371,6 +393,13 @@ void handleData() {
   server.send(200, "application/json", output);
 }
 
+void handleAquecer() {
+  aquecer = true; // Altera a variável para true ao receber a requisição POST
+  
+  server.send(200, "text/plain", "Aquecimento iniciado"); // Envie uma resposta de sucesso
+}
+
+
 void setup() {
   Serial.begin(115200);
   //delay(100);
@@ -389,9 +418,47 @@ void setup() {
   server.on("/data", handleData);
 
   server.begin();
+  server.on("/aquecer", HTTP_POST, handleAquecer);
   Serial.println("Servidor iniciado");
-}
 
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+
+}
+int n = 0;
+int n255 = 0;
+int n255255 = 0;
+int valor = 1;
 void loop() {
   server.handleClient();
+  
+  
+  if (aquecer) {
+    Serial.println("Aquecendo...");
+    // Lógica para acionar o aquecimento, por exemplo, controle de relé, etc.
+    Serial.println("Esquentando");
+    // 14 é o verde
+    // 13 é o vermelho
+    // 12 é o azul
+    /*
+    if (n > (255)){
+      n = 0;
+      n255 = n255 + 1;
+    }
+    if (n255 > (255)){
+      n255 = 0;
+      n255255 = n255255 + 1;
+    }
+    if (n255255 > (255)){
+      n255255 = 0;
+    }
+    */
+    analogWrite(12, random(0,255));   // Define a intensidade do vermelho (0-255)
+    analogWrite(13, random(0,255));   // Define a intensidade do vermelho (0-255)
+    analogWrite(14, random(0,255));   // Define a intensidade do vermelho (0-255)
+    //n = n + 1;
+    Serial.println(aquecer);
+    // aquecer = false; // Resetar para false após acionar o aquecimento (simulação)
+  }
 }
