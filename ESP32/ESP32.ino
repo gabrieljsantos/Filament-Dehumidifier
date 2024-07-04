@@ -213,7 +213,7 @@ const char* HTML_PAGE = R"rawliteral(
         <th colspan="3">......</th>
       </tr>
       <tr>
-        <th>Dados do Sensor DHT</th>
+        <th>Status</th>
         <th>Configuração</th>
         <th>Tempo</th>
       </tr>
@@ -340,6 +340,28 @@ void handleData() {
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
   unsigned long tempo_atividade = millis();
+
+  // Calcular a pressão de vapor de saturação (Es)
+  float Es = 6.112 * exp((17.67 * temperature) / (temperature + 243.5));
+
+  // Calcular a pressão de vapor real (E)
+  float E = Es * (humidity / 100.0);
+
+  // Calcular a humidade absoluta (HA)
+  float HA = (216.7 * E) / (temperature + 273.15);
+
+  // Exibir os resultados
+  Serial.print("Temperatura: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+
+  Serial.print("Humidade Relativa: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  Serial.print("Humidade Absoluta: ");
+  Serial.print(HA);
+  Serial.println(" g/m³");
 
 
   humidity_history[0][humidity_history_recording_indexer] = humidity;
