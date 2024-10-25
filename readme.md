@@ -4,9 +4,6 @@
 
 Este projeto utiliza um sensor de temperatura e umidade AAM2302B (DHT22) para monitorar e controlar a temperatura em um ambiente específico. As leituras são exibidas em um display LCD PCD8544, permitindo que o usuário ajuste os limites de temperatura utilizando um teclado matricial. O aquecedor é acionado ou desligado com base nas leituras do sensor.
 
-## Diretorio do Sketch
-`\Filament-Dehumidifier-NANO-sketch\Filament-Dehumidifier-NANO-sketch.ino`
-
 ## Componentes Utilizados
 
 - **Microcontrolador**: Arduino (por exemplo, Arduino Nano)
@@ -46,6 +43,10 @@ Este projeto utiliza um sensor de temperatura e umidade AAM2302B (DHT22) para mo
   - LED indicador: pino **9**
 
 ## Funcionamento do Código
+
+0. **Diretorio do Sketch**
+
+`\Filament-Dehumidifier-NANO-sketch\Filament-Dehumidifier-NANO-sketch.ino`
 
 1. **Inicialização**:
    - O código inicializa o sensor, o display e os pinos do teclado e do relé.
