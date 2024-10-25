@@ -73,7 +73,7 @@ Este projeto utiliza um sensor de temperatura e umidade AAM2302B (DHT22) para mo
 ## Interações do Usuário
 
 - O usuário pode interagir com o sistema utilizando os botões do teclado matricial. Os rótulos dos botões são:
-  - **'y'**: **OK** (✔️ confirma a ação)
+  - **'y'**: **OK** (confirma a ação)
   - **'n'**: **↩** (cancela a ação)
   - **'u'**: **▲** (aumenta o limite de temperatura)
   - **'d'**: **▼** (diminui o limite de temperatura)
